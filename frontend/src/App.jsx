@@ -3,6 +3,8 @@ import axios from "axios";
 import "./App.css";
 
 const API_URL = "http://127.0.0.1:8000/api/analyze";
+const PRESERVE_DOCX_URL = "http://127.0.0.1:8000/api/export/preserve-format-docx";
+const BEAUTIFIED_DOCX_URL = "http://127.0.0.1:8000/api/export/beautified-resume-docx";
 const HISTORY_KEY = "jobfit_analysis_history_v25";
 
 function App() {
@@ -313,6 +315,103 @@ function App() {
     window.print();
   };
 
+  const buildExportFormData = () => {
+    const formData = new FormData();
+
+    formData.append("resume_file", resumeFile);
+    formData.append(
+      "analysis_result",
+      JSON.stringify({
+        resume_info: result?.resume_info || {},
+        jd_info: result?.jd_info || {},
+        match_result: result?.match_result || {},
+        report_json: result?.report_json || {},
+      })
+    );
+
+    return formData;
+  };
+
+  const downloadDocxFromResponse = (response, filename) => {
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPreserveFormatResume = async () => {
+    if (!result) {
+      setErrorMsg("请先完成一次简历分析，再下载原格式优化版简历。");
+      return;
+    }
+
+    if (!resumeFile) {
+      setErrorMsg("当前结果来自历史记录或未检测到原始文件，无法生成原格式优化版。请重新上传 DOCX 简历并分析。");
+      return;
+    }
+
+    if (!resumeFile.name.toLowerCase().endsWith(".docx")) {
+      setErrorMsg("原格式优化版仅支持 DOCX 简历。PDF/TXT 无法可靠保留原模板，请使用模板美化版。");
+      return;
+    }
+
+    setErrorMsg("");
+    setProgressText("正在生成原格式优化版简历...");
+
+    try {
+      const response = await axios.post(PRESERVE_DOCX_URL, buildExportFormData(), {
+        responseType: "blob",
+      });
+
+      const position = result?.jd_info?.position || "目标岗位";
+      downloadDocxFromResponse(response, `JobFit_原格式优化版_${position}.docx`);
+    } catch (error) {
+      console.error(error);
+      setErrorMsg(getBackendErrorMessage(error));
+    } finally {
+      setProgressText("");
+    }
+  };
+
+  const handleDownloadBeautifiedResume = async () => {
+    if (!result) {
+      setErrorMsg("请先完成一次简历分析，再下载模板美化版简历。");
+      return;
+    }
+
+    if (!resumeFile) {
+      setErrorMsg("当前结果来自历史记录或未检测到原始文件，无法生成模板美化版。请重新上传简历并分析。");
+      return;
+    }
+
+    setErrorMsg("");
+    setProgressText("正在生成模板美化版简历...");
+
+    try {
+      const response = await axios.post(BEAUTIFIED_DOCX_URL, buildExportFormData(), {
+        responseType: "blob",
+      });
+
+      const position = result?.jd_info?.position || "目标岗位";
+      downloadDocxFromResponse(response, `JobFit_模板美化版_${position}.docx`);
+    } catch (error) {
+      console.error(error);
+      setErrorMsg(getBackendErrorMessage(error));
+    } finally {
+      setProgressText("");
+    }
+  };
+
   const score = result?.match_result?.score ?? 0;
   const matchedSkills = result?.match_result?.matched_skills || [];
   const missingRequired = result?.match_result?.missing_required_skills || [];
@@ -342,10 +441,10 @@ function App() {
     <div className="page">
       <header className="hero">
         <div className="hero-inner">
-          <div className="hero-badge">JobFit Agent V2.5</div>
+          <div className="hero-badge">JobFit Agent V2.6</div>
           <h1>智能求职分析系统</h1>
           <p>
-            支持单岗位分析、多 JD 对比、ATS 检查、Embedding 语义匹配、结构化证据链、简历改写建议和面试题预测。
+            支持单岗位分析、多 JD 对比、ATS 检查、Embedding 语义匹配、结构化证据链、简历改写建议、原格式优化版导出和模板美化版导出。
           </p>
         </div>
       </header>
@@ -455,8 +554,22 @@ function App() {
                 <button className="secondary-btn" onClick={handleReset}>
                   重新分析
                 </button>
+                <button
+                  className="preserve-btn"
+                  onClick={handleDownloadPreserveFormatResume}
+                  title="仅支持 DOCX：在原简历里替换改写后的内容，尽量保留照片和模板"
+                >
+                  下载原格式优化版
+                </button>
+                <button
+                  className="beautify-btn"
+                  onClick={handleDownloadBeautifiedResume}
+                  title="重新套用更美观的模板；DOCX 会尝试保留头像"
+                >
+                  下载模板美化版
+                </button>
                 <button className="export-btn" onClick={handleExportReport}>
-                  导出报告 / 保存 PDF
+                  导出分析报告 / 保存 PDF
                 </button>
               </div>
 

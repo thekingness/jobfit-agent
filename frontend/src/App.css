@@ -253,10 +253,13 @@ textarea:focus {
   margin-bottom: 18px;
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
 .secondary-btn,
+.preserve-btn,
+.beautify-btn,
 .export-btn {
   height: 42px;
   padding: 0 18px;
@@ -285,6 +288,26 @@ textarea:focus {
 
 .export-btn:hover {
   background: #1e293b;
+  transform: translateY(-1px);
+}
+
+.preserve-btn {
+  background: #16a34a;
+  color: white;
+}
+
+.preserve-btn:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+}
+
+.beautify-btn {
+  background: #7c3aed;
+  color: white;
+}
+
+.beautify-btn:hover {
+  background: #6d28d9;
   transform: translateY(-1px);
 }
 
