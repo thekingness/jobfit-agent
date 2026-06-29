@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+backend/.venv/
+
+# Environment variables / secrets
+.env
+.env.*
+!*.env.example
+backend/.env
+frontend/.env
+
+# Node / React
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.vite/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Uploaded files / temporary files
+uploads/
+tmp/
+temp/
+
+# Local database
+*.db
+jobfit.db
+backend/jobfit.db
+
+# Local embedding models
+models/
+backend/models/
+
+# Generated reports / private resumes
+*.pdf
+*.docx
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/
